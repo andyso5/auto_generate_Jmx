@@ -98,23 +98,35 @@ class ShowDoc(Cookie_login):
         
         return tuple(block_urls)
 
-    def get_complete_tree_context(self,url=''):
+    def get_complete_tree_context(self,url='',time=0.5):
         if url:
             self.get(url)
         res = {}
         first_class = self.get_first_context()
+        first_doc = self.get_docObj()
+        res = self.get_docObj_dict(first_doc)
+
         for first in first_class:
             first_name = self.get_branch_name(first)
-            self.click(first,reaction=0.5)
+            print(first_name)
+            self.click(first,reaction=time)
             first_dict = {}
+
+
             second_class = self.get_second_context(first)
+            second_doc  = self.get_docObj(first)
+            first_dict = self.get_docObj_dict(second_doc)
+
             for second in second_class:
-                second_name = self.get_branch_name(first)
-                self.click(second,reaction=0.5)
-                second_dict = {}
-                third_class = self.get_third_context(second)
-                for third in  third_class:
-                    second_dict[third.text]=third
+                second_name = self.get_branch_name(second)
+                print(' '*2 + second_name)
+                self.click(second,reaction=time)
+                
+                third_class = self.get_docObj(second)
+                second_dict = self.get_docObj_dict(third_class)
+                # for third in  third_class:
+                #     second_dict[third.text]=third
+
 
                 first_dict[second_name] = second_dict
 
@@ -122,16 +134,44 @@ class ShowDoc(Cookie_login):
         return res
 
     def get_first_context(self):
-        return self._wait_for_all(10,'.//ul[@role="menubar"]/li[@role="menuitem"]')
+        return self._wait_for_all(10,'.//ul[@role="menubar"]/li[@role="menuitem"]/div/..')
+
+    def get_docObj(self,element=None):
+        if element==None:
+            return self.finds('.//ul[@role="menubar"]/li[@role="menuitem"]/i[@class="el-icon-document"]/..')
+        else:
+            return element.find_elements_by_xpath('./ul[@role="menu"]/li/i[@class="el-icon-document"]/..')
+    
+    def get_docObj_dict(self,elements):
+        res = {}
+        for i in elements:
+            res[self.get_doc_name(i)] = i
+        
+        return res
+
+
 
     def get_second_context(self,element):
-        return element.find_elements_by_xpath('./ul[@role="menu"]/li')
+        return element.find_elements_by_xpath('./ul[@role="menu"]/li/div/..')
 
-    def get_third_context(self,element):
-        return element.find_elements_by_xpath('./ul[@role="menu"]/li')
+
+    # def get_third_context(self,element):
+    #     return element.find_elements_by_xpath('./ul[@role="menu"]/li')
 
     def get_branch_name(self,element):
+        # try:
+        #     res = element.find_element_by_xpath('./div').text
+        # except NoSuchElementException:
+        #     return element.text
         return element.find_element_by_xpath('./div').text
+
+    def get_doc_name(self,element):
+        return element.text
+    
+    def parse_page(self):
+        pass
+    # def get_doc(self,element):
+    #     return element.find_elements_by_xpath('./i[@class="el-icon-document"]')
 
 
         

@@ -1,5 +1,12 @@
 {
     "git.ignoreLimitWarning": true,
-    "python.pythonPath": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python37\\python.exe",
-    "python.linting.pylintArgs": ["--generate-members"]
+    "python.pythonPath": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python37-32\\python.exe",
+    "python.linting.pylintArgs": ["--generate-members"],
+    "python.linting.enabled": true,
+    "python.linting.pylintUseMinimalCheckers": false,
+    "python.jediEnabled": true,
+    "python.autoComplete.addBrackets": true,
+    "python.autoComplete.extraPaths": [
+        "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python37-32\\Lib\\site-packages",
+        "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python37-32\\Scripts",]
 }

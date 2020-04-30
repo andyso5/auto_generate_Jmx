@@ -19,7 +19,8 @@ class ParseCSV():
         self.file.close()
         return res
 if __name__ == '__main__':
-    p = r'E:\test.csv'
+    import os
+    p = os.path.join(os.path.dirname(__file__),'test.csv')
     from pprint import pprint
     pprint(ParseCSV(p).parse())
 
