@@ -10,6 +10,8 @@ pip intall -i https://pypi.tuna.tsinghua.edu.cn/simple pywin32
   参见：https://www.cnblogs.com/become/p/11646707.html
 
   最后需要在系统环境变量加入%JMETER_HOME%\bin;
+   
+  官方速度太慢，这里有一个百度盘分享(apache-jmeter-5.2.1):https://pan.baidu.com/s/1vM2UpUqjGcjpeJsStCNJoQ   密码:x0l2
 
 4.注意：
   待生成报告的路径文件夹必须为空,上一次生成的log.jtl也必须移走或删除
@@ -32,4 +34,3 @@ pip intall -i https://pypi.tuna.tsinghua.edu.cn/simple pywin32
   6.注意：
       由于这个配置是本地的，所以用selenium启动前需要关闭谷歌浏览器，不然会冲突报错
 
-"# auto_generate_jmx" 
