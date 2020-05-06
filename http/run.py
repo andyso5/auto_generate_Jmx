@@ -28,7 +28,7 @@ def recall_value(xlsx,sht,row,col):
 
 
 def normalize_assert(string):
-    temp = string.split(',')
+    temp = string.split('\n')
     res = []
     for i in temp:
         if i:
@@ -53,7 +53,7 @@ def parse_temp_xlsx(xlsx,sht,xlsx_path):
 
         header_str = xlsx.getCell(sht, i, 7)
         if header_str:
-            data['headers'] = {x.split(':')[0]:x.split(':')[-1] for x in header_str.split(',')}
+            data['headers'] = {x.split(':')[0]:x.split(':')[-1] for x in header_str.split('\n')}
         
         body = xlsx.getCell(sht, i, 8)
         if body:

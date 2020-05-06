@@ -1,6 +1,7 @@
 # ‐*‐ coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -30,17 +31,50 @@ class Cookie_login():
         chrome_options = Options()
         chrome_options.add_argument(r"user-data-dir=%s" % chrome_setting_path)
 
+        # capa = DesiredCapabilities.CHROME
+        # capa["pageLoadStrategy"] = "eager"#none,eager,normal
 
+        chrome_options.add_argument("start-maximized")
         if ant_crl:
             chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])#反知乎反爬虫
-        #chrome_options.add_argument("window-size=1024,768")
+        # chrome_options.add_argument("window-size=1024,768")
         if not driver:
-            self.driver = webdriver.Chrome(options=chrome_options, executable_path=chromedriver_path)
+            self.driver = webdriver.Chrome(options=chrome_options, executable_path=chromedriver_path)#desired_capabilities=capa
         else:
             self.driver = driver
         #设置访问超时
-        self.driver.set_page_load_timeout(12)
+        self.driver.set_page_load_timeout(1)
 
+    def _get_url(self,url,times=4):
+        self.driver.set_page_load_timeout(2)
+        if not url:
+            return
+        
+        count = 0
+        while True:
+            if count<times:
+                count+=1
+            else:
+                print('网址:%s \n第%d次加载失败。\n' %(url,count))
+                self.driver.set_page_load_timeout(10)
+                return False
+            try:
+                if count!=1:
+                    print('网址:%s \n正在执行第%d次加载。\n' %(url,count))
+                current_url = self.driver.current_url
+                if current_url==url:
+                    self.driver.refresh()
+                    self.driver.set_page_load_timeout(10)
+                    return True
+                else:
+                    self.driver.get(url)
+                    self.driver.set_page_load_timeout(10)
+                    return True
+            except TimeoutException:
+                
+                time.sleep(10)
+                continue
+    
     def get_domain(self,url):
         return re.search(r'http(s)?://(www.)?(?P<domain>[^\.]+)',url).group('domain')
 
@@ -55,7 +89,12 @@ class Cookie_login():
         self.driver.switch_to.window(self.driver.window_handles[0])
 
     def get(self,url):
-        self.driver.get(url)
+        self._get_url(url)
+        # try:
+        #     self.driver.get(url)
+        # except TimeoutException:
+        #     self.driver.set_page_load_timeout(1)
+        #     self.driver.get(url)
 
     def click(self,element,button=True,reaction=0):
         if button:
@@ -174,6 +213,84 @@ class ShowDoc(Cookie_login):
     # def get_doc(self,element):
     #     return element.find_elements_by_xpath('./i[@class="el-icon-document"]')
 
+class ZenTao(Cookie_login):
+    def __init__(self):
+        Cookie_login.__init__(self)
+
+        print('*****使用前请先确保禅道帐号已登录*****\n')
+        
+
+    def normalize_headers(self,string):
+        temp = string.split('\n')
+        res = {}
+        for i in temp:
+            if i and '"' not in i:
+                temp = i.split(':')
+                if len(temp)==2:
+                    res[temp[0]] = temp[-1]
+        return res
+
+    def normal_header_and_body(self,text):
+
+        headers = self.normalize_headers(text)
+
+        body = ''
+        pattern = re.compile('{.*}',re.DOTALL)
+        try:
+            body = pattern.search(text).group()
+        except AttributeError:
+            body = ''
+        return (headers,body)
+        
+    def parse_page(self,url):
+        res = {}
+        self.get(url)
+        try:
+            self._wait_for(5,'.//div[@class="cell"]')
+        except TimeoutException:
+            print('访问链接:\n%s\n超时' % url)
+            return None
+
+        url_text = self.find('.//div[@class="cell"]//div[@class="detail-content article-content"]').text
+
+        pattern = re.compile(r'http(s)?://[^\s]+')
+        try:
+            res['url'] = pattern.search(url_text).group()
+        except AttributeError:
+            print('链接:\n%s\n中没有找到url')
+            return None
+
+        pattern = re.compile(r'请求方式(.*?)(?P<t>[A-Za-z]+)',re.DOTALL)
+
+        try:
+            res['method'] = pattern.search(url_text).group('t')
+        except AttributeError:
+            print('链接:\n%s\n中没有找到请求方法，默认为POST')
+            res['method'] = 'POST'
+
+
+        branch = []
+
+        branch_ele = self.finds('.//table[@id="steps"]//tbody/tr')
+
+        for i in branch_ele:
+            headers, body = self.normal_header_and_body(i.find_element_by_xpath('./td[1]').text)
+            branch.append({
+                'id': i.find_element_by_xpath('./*[@class="step-id"]').text,
+                'headers': headers,
+                'body': body,
+                'assert': i.find_element_by_xpath('./td[2]').text
+                })
+
+        res['branch'] = branch
+        return res
+
+    # def    
+if __name__ == '__main__':
+    Z = ZenTao()
+    from pprint import pprint
+    pprint(Z.parse_page(url='https://zentao.dev.yitong.com/testcase-view-1470-1-testcase-0.html'))
+
 
         
 
@@ -182,10 +299,10 @@ class ShowDoc(Cookie_login):
 
 
     
-if __name__ == '__main__':
-    S = ShowDoc()
-    d = S.driver
-    from pprint import pprint
+# if __name__ == '__main__':
+#     S = ShowDoc()
+#     d = S.driver
+#     from pprint import pprint
 
 
 

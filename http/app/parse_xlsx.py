@@ -114,15 +114,16 @@ class EasyExcel():
         self.xlApp.Quit()
 
 if __name__ == '__main__':
+    pass
 
-    sheet  = 'Sheet1'
-    from pprint import pprint
+    # sheet  = 'Sheet1'
+    # from pprint import pprint
 
-    # p = r'E:\xiaoao\http_api_test\http\test.xlsx'
-    p = os.path.join(os.path.dirname(os.path.dirname(__file__)),'test.xlsx')
+    # # p = r'E:\xiaoao\http_api_test\http\test.xlsx'
+    # p = os.path.join(os.path.dirname(os.path.dirname(__file__)),'test.xlsx')
 
-    xlxs = EasyExcel(p)
+    # xlxs = EasyExcel(p)
 
-    # pprint(xlxs.parse('test.json'))
-    pprint(xlxs.parse())
+    # # pprint(xlxs.parse('test.json'))
+    # pprint(xlxs.parse())
 

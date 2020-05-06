@@ -34,7 +34,7 @@ class ModifyJmx():
         if isinstance(string,str):
             string = re.sub(r'\\',r'\\\\',string)
             string = re.sub(r'\n','',string)
-            string = re.sub(r'":\s+(?P<var>("|\d+))',r'":\g<var>',string)
+            string = re.sub(r'":\s+(?P<var>("|\d+))',r'":\g<var>',string)#虑去特定情况下:后的空格
             string = re.sub(r'"','&quot;',string)
             
             return string
@@ -53,7 +53,6 @@ class ModifyJmx():
     def adapt_cloud(self,data):
         if 'filename' in data and self.cloud:
             data['filename'] = os.path.split(data['filename'])[-1]
-
 
     def add_else_data(self,data):
         for i in data:
@@ -134,7 +133,7 @@ class ModifyJmx():
                     first = False
                 else:
                     self.add_addtion_assertion(assert_str)
-        del data['assert']
+            del data['assert']
 
     def hash_code(self,string):
 
@@ -234,7 +233,7 @@ class ModifyJmx():
         with open(jmx_path,'w',encoding='utf-8') as file:
             file.write(self.jmx_str)
 
-    def run_jmx(self,report_dir=None,jmx_path=None):
+    def run_jmx(self,jmx_path=None,report_dir=None):
         if not jmx_path:
             if self.jmx_path:
                 jmx_path = self.jmx_path
@@ -245,15 +244,20 @@ class ModifyJmx():
         if not report_dir:
             if self.report_dir:
                 report_dir = self.report_dir
+                cmd = r'jmeter -n -t %s -l log.jtl -e -o %s' % (jmx_path,report_dir)
             else:
-                print('报告路径为空，无法运行脚本文件\n')
-                return
+                # print('报告路径为空，无法运行脚本文件\n')
+                cmd = r'jmeter -n -t %s' % jmx_path
+        else:
+            cmd = r'jmeter -n -t %s -l log.jtl -e -o %s' % (jmx_path,report_dir)
+        
 
-
-        cmd = r'jmeter -n -t %s -l log.jtl -e -o %s' % (jmx_path,report_dir)
         file = os.popen(cmd)
-        print(file.read())
+        res = file.read()
+        print(res)
         file.close()
+        return res
+        
 
         # with os.popen(cmd) as file:
         #     print(file.read())
