@@ -13,7 +13,7 @@ pip intall -i https://pypi.tuna.tsinghua.edu.cn/simple pywin32
    
   官方速度太慢，这里有一个百度盘分享(apache-jmeter-5.2.1):https://pan.baidu.com/s/1vM2UpUqjGcjpeJsStCNJoQ   密码:x0l2
 
-4.注意：
+4.本地压测注意：
   待生成报告的路径文件夹必须为空,上一次生成的log.jtl也必须移走或删除
 
 5.如果需要用到网页登陆：https://showdoc.dev.yitong.com 获取数据
