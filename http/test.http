@@ -1,0 +1,6 @@
+POST http://api.dev.yitong.com/ytxy/gw/statistics/getUserStatistics
+Content-Type: application/json;charset=utf-8
+
+{
+    "userId": "${id}"
+}

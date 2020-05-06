@@ -1,3 +1,4 @@
+# ‐*‐ coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,10 +16,10 @@ import time
 
 current_path = os.path.abspath(__file__)
 current_path = os.path.dirname(current_path)
-config_path = os.path.join(current_path,'ini.txt')
+config_path = os.path.join(current_path,'config.txt')
 
 #读取配置
-with open(config_path,encoding='utf-8') as file:
+with open(config_path) as file:#gbk编码
     chrome_setting_path = file.readline().strip()#注意行末的\n
     chromedriver_path = file.readline().strip()
 

@@ -1,6 +1,6 @@
-ï»¿C:\Users\Administrator\AppData\Local\Google\Chrome\User Data
+C:\Users\Administrator\AppData\Local\Google\Chrome\User Data
 C:\Users\Administrator\AppData\Local\Programs\Python\Python37-32\Tools\chromedriver_win32\chromedriver.exe
 
-#ç¬¬ä¸€è¡Œä¸ºè°·æ­Œæµè§ˆå™¨é…ç½®ç›®å½•
-#ç¬¬äºŒè¡Œä¸ºchromedriver.exeçš„è·¯å¾„
-#utf-8ç¼–ç 
+#µÚÒ»ĞĞÎª¹È¸èä¯ÀÀÆ÷ÅäÖÃÄ¿Â¼
+#µÚ¶şĞĞÎªchromedriver.exeµÄÂ·¾¶
+#gbk±àÂë

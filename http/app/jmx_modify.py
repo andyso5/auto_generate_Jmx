@@ -1,193 +1,225 @@
-import subprocess
-from string import Template
 import re
 import os
+from copy import deepcopy
 
 current_path = os.path.abspath(__file__)
-current_path = os.path.dirname(current_path)
+current_path = os.path.dirname(os.path.dirname(current_path))
 template_path = os.path.join(current_path,r'jmeterScript\template.jmx')
 default_temp = os.path.join(current_path,r'jmeterScript\default_template.jmx')
 # template_path = r'E:\xiaoao\http_api_test\http\jmeterScript\template.jmx'
 # default_temp = r'E:\xiaoao\http_api_test\http\jmeterScript\default_template.jmx'
+
+
 class ModifyJmx():
     
-    def __init__(self,template_path=template_path,default_temp = default_temp):
-        #获取模板
-        # self.default_temp = open(default_temp,encoding='utf-8').read()
-        self.temp = Template(open(template_path,encoding='utf-8').read())
-        #匹配所有含变量的标签
+    def __init__(self,template_path=template_path,default_temp = default_temp,cloud=False):
+
+        self.cloud = cloud#是否准备到阿里云之类云端平台上去测试，这会决定csv文件路径值是否为相对路径
         self.all_var_obj = re.compile(r'<[^>]+>\$[^<]+<[^>]+>')
 
-        self.vars = self.all_var_obj.findall(self.temp.template)
+        # self.vars = self.all_var_obj.findall(self.temp.template)
 
-        self.jmx_str = ''
+        self.template_path = template_path
+        
 
         self.jmx_path = ''
 
         self.report_dir = ''
 
-    def gain_default_data(self):
-        pass
+        self.target_temp = r'<(?P<front>.*?){key}(?P<rear>.*?)>{value}<'
 
-    def _gain_head_space_num(self,text):
-        #返回头部空格个数
-        return re.search(r'\s+',text).span()[-1] - 1
+        self.repel_temp = r'<\g<front>{key}\g<rear>>{value}<'
 
-    def _add_header_info(self,tmp,headers):
-        "添加请求头信息"
-        "tmp为string.Template对象"
-        "返回一个string.Template对象"
-        "headers为字典"
-
-
-        #定位template.jmx中的请求头区域
-        #\s会匹配到\n
-        target = r'\s+<collectionProp name="HeaderManager.headers"/>'
-
-        #默认为模板中没有设置这一项
-        target_pattern = re.compile(target)
-        headstr = target_pattern.search(tmp.template).group()
-        space_num = self._gain_head_space_num(headstr)
-
-        #用来加载headers
-        sub_temp = Template(
-            '\n' + ' '*space_num \
-            + '<collectionProp name="HeaderManager.headers">\n' \
-            + ' '*(space_num+2) \
-            + '<elementProp name="Content-Type" elementType="Header">\n$headStr' \
-            + ' '*(space_num+2) \
-            + '</elementProp>\n' \
-            + ' '*space_num + '</collectionProp>'
-            )#最有一个不需要加\n，因为正则没有匹配到
-
-        #设置变量headStr的模板
-        core = ''
-        k_v_temp = Template(
-            ' '*(space_num+4) \
-            + '<stringProp name="Header.name">$key</stringProp>\n' \
-            + ' '*(space_num+4) \
-            + '<stringProp name="Header.value">$value</stringProp>\n'
-            )
-
-        #加载headers
-        for i in headers:
-            core += k_v_temp.substitute(key=i,value=headers[i])
-
-        #置换模板中的变量
-        tmp = Template(target_pattern.sub(sub_temp.substitute(headStr=core),tmp.template))
-
-        return tmp
-        
-    #添加请求头
-    def add_header_info(self,headers):
-        "headers为dict"
-        "添请求正文"
-        if self.jmx_str:
-            tmp = Template(self.jmx_str)
-            tmp = self._add_header_info(tmp,headers)
-            self.jmx_str = tmp.template
+    def uniform_jmx_var(self,string):
+        if isinstance(string,str):
+            string = re.sub(r'\\',r'\\\\',string)
+            string = re.sub(r'\n','',string)
+            string = re.sub(r'":\s+(?P<var>("|\d+))',r'":\g<var>',string)
+            string = re.sub(r'"','&quot;',string)
+            
+            return string
         else:
-
-            self.temp = self._add_header_info(self.temp,headers)
-
-    
-    def _add_body_data(self,tmp,data):
-        "data为str"
-        "tmp为string.Template对象"
-        "添请求正文"
-        "返回一个string.Template对象"
-
-
-        #定位template.jmx中的请求正文区域
-        target_temp = r'\s+<collectionProp name="Arguments.arguments"/>'
-        target_pattern = re.compile(target_temp)
-        headstr = target_pattern.search(tmp.template).group()
-        space_num = self._gain_head_space_num(headstr)
-
-        #设置变量bodyStr的模板
-        sub_tmp = Template(
-            '\n' \
-        
-            + ' '*space_num \
-            + '<collectionProp name="Arguments.arguments">' \
-            + ' '*(space_num + 2*1) \
-            + '<elementProp name="" elementType="HTTPArgument">' \
-            + ' '*(space_num + 2*2) \
-            + '<boolProp name="HTTPArgument.always_encode">false</boolProp>\n'
-            + ' '*(space_num + 2*2) \
-            + '<stringProp name="Argument.value">$value</stringProp>\n' \
-            + ' '*(space_num + 2*2) \
-            + '<stringProp name="Argument.metadata">=</stringProp>\n' \
-            + ' '*(space_num + 2*1) \
-            + '</elementProp>\n' \
-            + ' '*space_num \
-            + '</collectionProp>' 
-
-
-        )
-
-        #使data符合jmx规范
-        data = re.sub('\n','',data)
-        data = re.sub('"','&quot;',data)
-
-        #置换模板中的变量
-        core = sub_tmp.substitute(value=data)
-        tmp = Template(target_pattern.sub(core,tmp.template))
-        return tmp
-        
-    #添加请求正文
-    def add_body_data(self,data):
-        "data为str"
-        "添请求正文"
-        if self.jmx_str:
-            tmp = Template(self.jmx_str)
-            tmp = self._add_body_data(tmp,data)
-            self.jmx_str = tmp.template
+            return str(string)
+     
+    def uniform_jmx_name(self,string):
+        if isinstance(string,str):
+            if string[0].isupper():
+                return re.sub('_','.',string,count=1)
+            else:
+                return string
         else:
-            self.temp = self._add_body_data(self.temp,data)
+            return str(string)
 
+    def adapt_cloud(self,data):
+        if 'filename' in data and self.cloud:
+            data['filename'] = os.path.split(data['filename'])[-1]
+
+
+    def add_else_data(self,data):
+        for i in data:
+            # print(data[i])
+            name  = self.uniform_jmx_name(i)
+            target = self.target_temp.format(key=name, value='.*?')
+            #需要将"转换成&quot;
+            repel  = self.repel_temp.format(key=name, value=self.uniform_jmx_var(data[i]))
+            res = re.subn(target, repel, self.jmx_str)
+            num = res[-1]
+            if num == 0:
+                raise Exception("不存在变量%s" % i, 0)
+            elif num > 1:
+
+                raise Exception("存在多个同名变量", 2)
+            else:
+                self.jmx_str = res[0]
 
     def load_data(self,data):
-        "可以连续加载"
-        if 'headers' in data:
-            self.add_header_info(data['headers'])
-            del data['headers']
+        "data为dict，参照模版的name属性设置键"
+        #事先加入assertion并在data中删除
+        self.jmx_str = open(self.template_path,encoding='utf-8').read()
         
-        if 'data' in data:
-            self.add_header_info(data['data'])
-            del data['data']
+        copy_data = deepcopy(data)
 
-        if not self.jmx_str:
-            self.warning(data,self.temp.template)
-            self.jmx_str = self.temp.safe_substitute(**data)
-        else:
-            self.warning(data,self.jmx_str)
-            new = Template(self.jmx_str).safe_substitute(**data)
-            self.jmx_str = new
+        self.adapt_cloud(copy_data)
 
-    def warning(self,data,text):
-        #host为空发出警告
-        ready_vars = self.all_var_obj.findall(text)
-        undefined = [] 
+        self.add_assertion(copy_data)
+        self.add_headers(copy_data)
+        self.add_else_data(copy_data)
+
+        self.last_tail(copy_data)
+
+    def add_addtion_assertion(self,string):
+        target_temp = \
+            '</stringProp>\n' + \
+            '{assertion}' + \
+            '{space}' * 12 + '</collectionProp>\n' + \
+            '{space}' * 12 + '<stringProp name="Assertion.custom_message"></stringProp>'
+        assertion_temp = ' ' * 14 + '<stringProp name="{name}">{string}</stringProp>' 
+
+        target = target_temp.format(assertion='', space='\s')
+        name = self.hash_code(string)
+        ass = target_temp.format(
+
+            assertion=assertion_temp.format(name=name, string=string),
+            space=' '
+
+            )
+
+
+        # self.jmx_str = re.sub(target, ass, self.jmx_str)
+        res = re.subn(target, ass, self.jmx_str)
+        # print('替代结果为%d' % res[-1])
+        self.jmx_str = res[0]
+
+    def add_first_assertion(self,string):
+        pattern = re.compile(r'<stringProp name="\d+"></stringProp>')
+        name = self.hash_code(string)
+        target = r'<stringProp name="%s">%s</stringProp>' % (name,string)
+        self.jmx_str = re.sub(pattern, target, self.jmx_str)
+
+    def add_assertion(self,data):
+        keys = data.keys()
+        first = True
+
+        # if '0' in keys or 0 in keys:
+        #     raise Exception('不可以将字典的键设置为0或者"0"\n')
+        if 'assert' in keys:
+            assert_strs = data['assert']
+            if isinstance(assert_strs,str):
+                assert_strs = [assert_strs]
+            for assert_str in assert_strs:
+                assert_str = self.uniform_jmx_var(assert_str)
+                # print(assert_str)
+                if first:
+                    self.add_first_assertion(assert_str)
+                    first = False
+                else:
+                    self.add_addtion_assertion(assert_str)
+        del data['assert']
+
+    def hash_code(self,string):
+
+        def convert_n_bytes(n, b):
+            bits = b * 8
+            return (n + 2 ** (bits - 1)) % 2 ** bits - 2 ** (bits - 1)   
+
+        def convert_4_bytes(n):
+            return convert_n_bytes(n, 4)
+
+        def getHashCode(s):
+            h = 0
+            n = len(s)
+            for i, c in enumerate(s):
+                h = h + ord(c) * 31 ** (n - 1 - i)
+            return convert_4_bytes(h)
+
+        return getHashCode(string)
+    
+
+    def add_headers(self,data):
         
-        data_keys = data.keys()
-        unused_keys = list(data_keys)
-        for i in ready_vars:
-            key = re.search(r'\$([^<]+)',i).group(1)
-            if key in data_keys:
-                unused_keys.remove(key)
+        try:
+            headers = data['headers']
+        except KeyError:
+            return 
+
+        if not data:
+            return 
+        first = True
+        for i in headers:
+            if first:
+                try:
+                    first_header = {
+                        'Header_name':i,
+                        'Header_value':headers[i]
+                    }
+                    self.add_else_data(first_header)
+                except Exception as e:
+                    if e.args[-1]==2:
+                        self._add_a_pair_header(i,headers[i])
+                    else:
+                        raise Exception(*e.args)
+                first = False
             else:
-                undefined.append(i)
+                self._add_a_pair_header(i,headers[i])
+            
+        del data['headers']
 
-        if unused_keys:
-            print('存在没有使用的数据:')
-            for i in unused_keys:
-                print(i)
+    def _add_a_pair_header(self,key,value):
+        #第二及以上次插入点
+        #</elementProp>\n{headers}\t\*6</collectionProp>
 
-        if undefined:
-            print('存在没有赋值的变量:')
-            for i in undefined:
-                print(i)
+        temp = '  '*7 + '<elementProp name="" elementType="Header">\n' \
+          + '  '*8 + '<stringProp name="Header.name">{key}</stringProp>\n' \
+          + '  '*8 + '<stringProp name="Header.value">{value}</stringProp>\n' \
+          + '  '*7 + '</elementProp>\n'
+        
+        tg_temp = '</elementProp>\n'\
+             + '{header}' + '{space}' * 12 + '</collectionProp>\n'\
+             + '{space}' * 10 + '</HeaderManager>'
+
+        target = tg_temp.format(header='',space='\s')
+        repel = tg_temp.format(header = temp.format(key=key,value=value), space=' ')
+        res = re.subn(target, repel, self.jmx_str)
+        if res[-1]==0:
+            raise Exception('插入%s：%s请求头信息失败' % (key,value))
+        elif res[-1] > 1:
+            raise Exception('存在多个请求头信息插入点')
+        else:
+            self.jmx_str = res[0]
+
+    def last_tail(self,data):
+        if 'filename' not in data:
+            pattern = re.compile('\s+<CSVDataSet.+?<hashTree/>', re.DOTALL)#跨行匹配
+            res  = pattern.subn('',self.jmx_str)
+            # print('裁剪结果:%d' % res[-1])
+            self.jmx_str = res[0]
+
+            temp = '</objProp>\n{value}</ResultCollector>'
+            plus = '  ' * 5 + '<stringProp name="filename"></stringProp>\n' + '  ' * 4
+            pattern = re.compile(temp.format(value='\s+'), re.DOTALL)
+            res  = pattern.subn(temp.format(value=plus), self.jmx_str)
+            self.jmx_str = res[0]
+
 
     def generate_jmx(self,jmx_path=None):
         if not jmx_path:
@@ -199,10 +231,10 @@ class ModifyJmx():
         else:
             self.jmx_path = jmx_path
 
-        with open(jmx_path,'w') as file:
+        with open(jmx_path,'w',encoding='utf-8') as file:
             file.write(self.jmx_str)
 
-    def run_jmx(self,report_dir=None,jmx_path=None,):
+    def run_jmx(self,report_dir=None,jmx_path=None):
         if not jmx_path:
             if self.jmx_path:
                 jmx_path = self.jmx_path
@@ -226,32 +258,48 @@ class ModifyJmx():
         # with os.popen(cmd) as file:
         #     print(file.read())
 
+
+
 if __name__ == '__main__':
     import json
     report = os.path.join(os.path.dirname(os.path.abspath(__file__)),'report')
-    m = ModifyJmx()
+    m = ModifyJmx(cloud=False)
     m.report_dir = report
     m.jmx_path = os.path.join(os.path.dirname(report),'test.jmx')
-    headers = {
-        'Content-Type': 'application/json;charset=utf-8',
-        'X-YT-AppKey': 'ce2419551b8b455ebd9fcfa3101e3444',
-        'Authorization': 'Bearer eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJ5aXRvbmcuY29tIiwic3ViIjoiMTAxNzMzIiwiYXVkIjoiOTg0ZjI3MGYwMzA5NDBlYTgxNDMyNTg5NmFiMGU4NDUiLCJpYXQiOjE1NDM0ODI0MzYsImV4cCI6MTYzODA5MDQzNn0.75zp_SE5lfCsLMzoqBUCfSKwZ2yNBYUiuYYNByvFN20_XUlBA6utytCZSHM9fFyH0Qhl3HIQmOXBaOGnhRlnjA'
-    }
-    data = json.dumps({
-        'code': 'ZHw657Qk2ree9EL595v2sh2FgZBnJzYZYkSA3SBDCVE='
-    })
-    m.add_header_info(headers)
-    m.add_body_data(data)
-    m.load_data({
-        'domain':'api.dev.yitong.com',
-        'protocol':'http',
-        'path':'/yswx/gw/util/decode',
-        'method':'POST',
+
+    """约定像name="Argument.value"这样的变量将"."用"_"代替"""
+    data  = {
+        #线程设置
+        'num_threads':3,
+        'ramp_time':1,
         'loops':1,
-        'num_threads':10,
-        'ramp_time':10,
 
-        })
+        #请求参数
+        'Argument_value':'{"id":"${id}"}',#请求正文
+        'HTTPSampler_domain':'api.dev.yitong.com',
+        'HTTPSampler_path':'/ytxy/gw/statistics/getUserStatistics',
+        'HTTPSampler_method':'POST',
 
+        #请求头
+        'headers':{
+            'Content-Type':'application/json;charset=utf-8',
+            'xiaoao':'agwgwqwfew'
+            },
+        
+        #断言
+        "assert":['"code": 1','"message": "操作成功"'],
+
+        #csv配置
+        #上传到阿里云，只需要写test.csv
+        #在本地测试需要填写完整路径
+        "filename":r"C:\Users\Administrator\Desktop\python\project\auto_generate_jmx\http\app\test.csv",
+        # "filename":'test.csv',
+        #如果csv第一行没有变量名需要设置，变量名之间用","隔开
+        "variableNames":'',
+
+
+
+    }
+    m.load_data(data)
     m.generate_jmx()
-    m.run_jmx()
+    # m.run_jmx()
