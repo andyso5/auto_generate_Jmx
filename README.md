@@ -84,7 +84,7 @@
   * 建立一个ModifyJmx()对象：  
   m = ModifyJmx() 
   m.run_jmx(jmx_path,report_dir)  
-  report_dir可为空，不为空时，只能一个一个测试，详情参见[注意事项](#3.注意事项)
+  report_dir可为空，不为空时，只能一个一个测试，详情参见[注意事项](#3注意事项)
   
   
   
