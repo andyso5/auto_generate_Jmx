@@ -1,18 +1,18 @@
 ### 1.安装
 
   #### 1.1 安装pywin32库
-  解析xlsx文件需要安装pywin32，注意文件比较大，采用国内镜像可以大大加快速度，在cmd如下输入：
+  解析xlsx文件需要安装pywin32，注意文件比较大，采用国内镜像可以大大加快速度，在cmd如下输入：  
   pip intall -i https://pypi.tuna.tsinghua.edu.cn/simple pywin32
 
-  若要一劳永逸，详情参见：
+  若要一劳永逸，详情参见：  
   https://blog.csdn.net/fatfatmomo/article/details/81184119
   
   
   #### 1.2 防止导入win32模块时报错
-  把..\AppData\Local\Programs\Python\Python37\lib\site-packages\win32
+  把..\AppData\Local\Programs\Python\Python37\lib\site-packages\win32  
   这个路径加到系统变量
   虽然我在这个项目中加入了一段代码可以避开这个报错，但是最好从源头解决这个问题
-  详情：
+  详情：  
   https://blog.csdn.net/Andy_221313/article/details/105701918
 
   #### 1.3 下载Jmeter并加入到系统变量
