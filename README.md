@@ -80,8 +80,16 @@
   也可以自行设置
   * 设置完毕后可以运行run.py，然后可以在jmx_path对应的目录中看到生成的jmx文件
   
+  ##### 2.2 本地运行jmx文件
+  * 建立一个ModifyJmx()对象：  
+  m = ModifyJmx() 
+  m.run_jmx(jmx_path,report_dir)  
+  report_dir可为空，不为空时，只能一个一个测试，详情参见[注意事项](#3.注意事项)
   
-#### 3.注意事项：
+  
+  
+  
+#### 3.注意事项
   * 使用jmeter本地压测时  
   待生成报告的路径文件夹必须为空，否则报错  
   报告路径是指使用ModifyJmx().run_jmx(report_dir)中的report_dir这个参数  
@@ -90,8 +98,8 @@
   log.jtl可以直接改后缀名为.csv，即可得到货真价实的csv文件
   
   * jmx文件是要提交到阿里云进行压测的  
-  如果有csv文件作为参数文件，路径只能将模版表格中的Params下设置为test.csv形式  
-  在上传到阿里云时，一并上传次csv文件
+  如果有csv文件作为参数文件，路径只需要将模版表格中的Params设置为test.csv的相对路径形式  
+  在上传到阿里云时，一并上传对应的csv文件
   
  
   
