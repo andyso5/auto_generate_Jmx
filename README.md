@@ -68,12 +68,33 @@
   * 注意事项：  
   selenium启动的浏览器的配置参数和手动点开chrome的是一样的，所以selenium启动前需要关闭chrome浏览器  
   
+#### 2.运行流程：
+  ##### 2.1 批量生成jmx文件  
+    * 复制api_test_temp.xlsx，按照这个模版文件的规范填写测试用例，可任意改名为test.xlsx  
+    * 将app/run.py这个文件中的xlsx_path的值改为:  
+    xlsx_path = r'../../test.xlsx'  
+    一定要是绝对路径，并且前面加上'r'，否则报错  
+    * 如果修改了表单名（原名“pc端”），也要将xlsx_path下的sheet变量改为相应值
+    * jmx_path, report_path分别是生成的jmx文件存放目录，与压测报告存放目录（3.注意事项中有讲）  
+    函数generate_jmx_and_report_repository(xlsx_path)会根据xlsx_path所在父目录生成jmx_path, report_path这两个目录  
+    也可以自行设置
+    * 设置完毕后可以运行run.py，然后可以在jmx_path对应的目录中看到生成的jmx文件
   
   
-  
-#### 2.注意事项：
-  * 使用jmeter本地测试时  
+#### 3.注意事项：
+  * 使用jmeter本地压测时  
   待生成报告的路径文件夹必须为空，否则报错  
+  报告路径是指使用ModifyJmx().run_jmx(report_dir)中的report_dir这个参数  
+  用来存放对单一用例(一个jmx文件)的压测结果的分析文件，是一个html文件
+  如果run_jmx(report_dir)中report_dir参数为空（不设置默认为空），则不生成报告，测试结果会记录在app目录下的log.jtl中  
+  log.jtl可以直接改后缀名为.csv，即可得到货真价实的csv文件
+  
+  * jmx文件是要提交到阿里云进行压测的  
+  如果有csv文件作为参数文件，路径只能将模版表格中的Params下设置为test.csv形式  
+  在上传到阿里云时，一并上传次csv文件
+  
+ 
+  
 
 
 
