@@ -75,7 +75,7 @@
   xlsx_path = r'../../test.xlsx'  
   一定要是绝对路径，并且前面加上'r'，否则报错  
   * 如果修改了表单名（原名“pc端”），也要将xlsx_path下的sheet变量改为相应值
-  * jmx_path, report_path分别是生成的jmx文件存放目录，与压测报告存放目录，参见[注意事项](#3注意事项) 
+  * jmx_path, report_path分别是生成的jmx文件存放目录，与压测报告存放目录，参见[注意事项](#3注意事项)  
   函数generate_jmx_and_report_repository(xlsx_path)会根据xlsx_path所在父目录生成jmx_path, report_path这两个目录  
   也可以自行设置
   * 设置完毕后可以运行run.py，然后可以在jmx_path对应的目录中看到生成的jmx文件
